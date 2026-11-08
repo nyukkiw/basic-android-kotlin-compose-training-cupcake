@@ -16,18 +16,20 @@
 package com.example.cupcake.data
 
 /**
- * Data class that represents the current UI state in terms of [quantity], [flavor],
- * [dateOptions], selected pickup [date] and [price]
+ * Data class yang menyimpan state pesanan komputer: komponen yang dipilih dan
+ * perkiraan harga ([price]) yang sudah diformat dalam Rupiah.
  */
 data class OrderUiState(
-    /** Selected cupcake quantity (1, 6, 12) */
-    val quantity: Int = 0,
-    /** Flavor of the cupcakes in the order (such as "Chocolate", "Vanilla", etc..) */
-    val flavor: String = "",
-    /** Selected date for pickup (such as "Jan 1") */
-    val date: String = "",
-    /** Total price for the order */
-    val price: String = "",
-    /** Available pickup dates for the order*/
-    val pickupOptions: List<String> = listOf()
+    /** Jenis prosesor, mis. "Intel Core i5" */
+    val processor: String = "",
+    /** Besar memori, mis. "8 GB" */
+    val memory: String = "",
+    /** Ukuran dan tipe hardisk, mis. "SSD 512 GB" */
+    val storage: String = "",
+    /** Ukuran monitor, mis. "15.6 inci" */
+    val monitor: String = "",
+    /** Tipe kartu grafis, mis. "NVIDIA RTX 3050" */
+    val gpu: String = "",
+    /** Perkiraan harga komputer, sudah diformat Rupiah */
+    val price: String = ""
 )

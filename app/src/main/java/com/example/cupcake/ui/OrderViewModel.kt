@@ -16,103 +16,69 @@
 package com.example.cupcake.ui
 
 import androidx.lifecycle.ViewModel
+import com.example.cupcake.data.ComponentOption
+import com.example.cupcake.data.DataSource
 import com.example.cupcake.data.OrderUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Locale
 
-/** Price for a single cupcake */
-private const val PRICE_PER_CUPCAKE = 2.00
-
-/** Additional cost for same day pickup of an order */
-private const val PRICE_FOR_SAME_DAY_PICKUP = 3.00
+/** Harga dasar komputer/notebook (Rupiah) sebelum ditambah komponen pilihan */
+private const val BASE_PRICE = 3_000_000L
 
 /**
- * [OrderViewModel] holds information about a cupcake order in terms of quantity, flavor, and
- * pickup date. It also knows how to calculate the total price based on these order details.
+ * [OrderViewModel] menyimpan komponen komputer yang dipilih (prosesor, memori, hardisk,
+ * monitor, kartu grafis) dan menghitung perkiraan harganya.
  */
 class OrderViewModel : ViewModel() {
 
-    /**
-     * Cupcake state for this order
-     */
-    private val _uiState = MutableStateFlow(OrderUiState(pickupOptions = pickupOptions()))
+    private val _uiState = MutableStateFlow(OrderUiState())
     val uiState: StateFlow<OrderUiState> = _uiState.asStateFlow()
 
-    /**
-     * Set the quantity [numberCupcakes] of cupcakes for this order's state and update the price
-     */
-    fun setQuantity(numberCupcakes: Int) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                quantity = numberCupcakes,
-                price = calculatePrice(quantity = numberCupcakes)
-            )
-        }
-    }
+    fun setProcessor(name: String) = updateOrder { it.copy(processor = name) }
+
+    fun setMemory(name: String) = updateOrder { it.copy(memory = name) }
+
+    fun setStorage(name: String) = updateOrder { it.copy(storage = name) }
+
+    fun setMonitor(name: String) = updateOrder { it.copy(monitor = name) }
+
+    fun setGpu(name: String) = updateOrder { it.copy(gpu = name) }
 
     /**
-     * Set the [desiredFlavor] of cupcakes for this order's state.
-     * Only 1 flavor can be selected for the whole order.
-     */
-    fun setFlavor(desiredFlavor: String) {
-        _uiState.update { currentState ->
-            currentState.copy(flavor = desiredFlavor)
-        }
-    }
-
-    /**
-     * Set the [pickupDate] for this order's state and update the price
-     */
-    fun setDate(pickupDate: String) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                date = pickupDate,
-                price = calculatePrice(pickupDate = pickupDate)
-            )
-        }
-    }
-
-    /**
-     * Reset the order state
+     * Reset pesanan ke kondisi awal
      */
     fun resetOrder() {
-        _uiState.value = OrderUiState(pickupOptions = pickupOptions())
+        _uiState.value = OrderUiState()
+    }
+
+    /** Terapkan perubahan lalu hitung ulang harga dari state yang baru. */
+    private fun updateOrder(change: (OrderUiState) -> OrderUiState) {
+        _uiState.update { current ->
+            val updated = change(current)
+            updated.copy(price = calculatePrice(updated))
+        }
     }
 
     /**
-     * Returns the calculated price based on the order details.
+     * Perkiraan harga = harga dasar + harga tiap komponen yang sudah dipilih.
      */
-    private fun calculatePrice(
-        quantity: Int = _uiState.value.quantity,
-        pickupDate: String = _uiState.value.date
-    ): String {
-        var calculatedPrice = quantity * PRICE_PER_CUPCAKE
-        // If the user selected the first option (today) for pickup, add the surcharge
-        if (pickupOptions()[0] == pickupDate) {
-            calculatedPrice += PRICE_FOR_SAME_DAY_PICKUP
-        }
-        val formattedPrice = NumberFormat.getCurrencyInstance().format(calculatedPrice)
-        return formattedPrice
+    private fun calculatePrice(state: OrderUiState): String {
+        val total = BASE_PRICE +
+            priceOf(DataSource.processors, state.processor) +
+            priceOf(DataSource.memories, state.memory) +
+            priceOf(DataSource.storages, state.storage) +
+            priceOf(DataSource.monitors, state.monitor) +
+            priceOf(DataSource.gpus, state.gpu)
+        val formatter = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+        formatter.maximumFractionDigits = 0
+        return formatter.format(total)
     }
 
-    /**
-     * Returns a list of date options starting with the current date and the following 3 dates.
-     */
-    private fun pickupOptions(): List<String> {
-        val dateOptions = mutableListOf<String>()
-        val formatter = SimpleDateFormat("E MMM d", Locale.getDefault())
-        val calendar = Calendar.getInstance()
-        // add current date and the following 3 dates.
-        repeat(4) {
-            dateOptions.add(formatter.format(calendar.time))
-            calendar.add(Calendar.DATE, 1)
-        }
-        return dateOptions
-    }
+    /** Harga opsi bernama [name] di [options]; 0 jika belum dipilih. */
+    private fun priceOf(options: List<ComponentOption>, name: String): Long =
+        options.firstOrNull { it.name == name }?.price ?: 0L
 }

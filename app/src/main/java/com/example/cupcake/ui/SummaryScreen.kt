@@ -30,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -52,30 +51,24 @@ fun OrderSummaryScreen(
     onSendButtonClicked: (String, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val resources = LocalContext.current.resources
-
-    val numberOfCupcakes = resources.getQuantityString(
-        R.plurals.cupcakes,
-        orderUiState.quantity,
-        orderUiState.quantity
-    )
-    //Load and format a string resource with the parameters.
+    //Format string resource dengan parameter komponen yang dipilih
     val orderSummary = stringResource(
         R.string.order_details,
-        numberOfCupcakes,
-        orderUiState.flavor,
-        orderUiState.date,
-        orderUiState.quantity
+        orderUiState.processor,
+        orderUiState.memory,
+        orderUiState.storage,
+        orderUiState.monitor,
+        orderUiState.gpu,
+        orderUiState.price
     )
-    val newOrder = stringResource(R.string.new_cupcake_order)
-    //Create a list of order summary to display
+    val newOrder = stringResource(R.string.new_computer_order)
+    //Daftar ringkasan pesanan yang ditampilkan
     val items = listOf(
-        // Summary line 1: display selected quantity
-        Pair(stringResource(R.string.quantity), numberOfCupcakes),
-        // Summary line 2: display selected flavor
-        Pair(stringResource(R.string.flavor), orderUiState.flavor),
-        // Summary line 3: display selected pickup date
-        Pair(stringResource(R.string.pickup_date), orderUiState.date)
+        Pair(stringResource(R.string.processor), orderUiState.processor),
+        Pair(stringResource(R.string.memory), orderUiState.memory),
+        Pair(stringResource(R.string.storage), orderUiState.storage),
+        Pair(stringResource(R.string.monitor), orderUiState.monitor),
+        Pair(stringResource(R.string.gpu), orderUiState.gpu)
     )
 
     Column(
@@ -125,7 +118,7 @@ fun OrderSummaryScreen(
 fun OrderSummaryPreview() {
     CupcakeTheme {
         OrderSummaryScreen(
-            orderUiState = OrderUiState(0, "Test", "Test", "$300.00"),
+            orderUiState = OrderUiState("Intel Core i5", "8 GB", "SSD 512 GB", "15.6 inci", "NVIDIA RTX 3050", "Rp10.000.000"),
             onSendButtonClicked = { subject: String, summary: String -> },
             onCancelButtonClicked = {},
             modifier = Modifier.fillMaxHeight()
